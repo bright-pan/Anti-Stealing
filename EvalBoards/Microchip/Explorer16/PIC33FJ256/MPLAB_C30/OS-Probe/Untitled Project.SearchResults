@@ -1,0 +1,5 @@
+---- BCD Matches (1 in 1 files) ----
+Lib_modbus.h (c:\micrium\...\uc-lib):116
+	unsigned char TP_SCTS_Year;//BCD;
+	unsigned char TP_SCTS_Month;
+	unsigned char TP_SCTS_Day;
