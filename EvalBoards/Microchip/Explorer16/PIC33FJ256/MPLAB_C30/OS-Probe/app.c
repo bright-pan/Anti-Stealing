@@ -41,7 +41,7 @@ const DEVICE_INIT_PARAMATERS device_init_paramaters_const = {
 	{"比亚迪出线电缆",},
 	{{0,},},
 	1,
-	{"13679208519",},
+	{"13474656377",},
 	"",
 	"123456"
 };
@@ -231,11 +231,18 @@ SEM_SMS_MSG_INDICATOR = OSSemCreate(0);
 
     BSP_Init();                                                         /* Initialize BSP functions                                 */
 
-	
+	while(GR64_VIO == 1)
+	{
+		GR64ONOFF_LAT = 0;
+		OSTimeDly(60);
+		GR64ONOFF_LAT = 1;
+		OSTimeDly(1000);	
+	}
+	OSTimeDly(1000);
 /* 全局变量初始化 */
 	OSMutexPend(MUTEX_EEPROM, 0, &err);
-//	device_init_paramaters = device_init_paramaters_const;
-//	EEPROM_write(EEPROM_DEVICE_INIT_PARAMATERS_START, (unsigned char *)&device_init_paramaters, sizeof(DEVICE_INIT_PARAMATERS));
+	device_init_paramaters = device_init_paramaters_const;
+	EEPROM_write(EEPROM_DEVICE_INIT_PARAMATERS_START, (unsigned char *)&device_init_paramaters, sizeof(DEVICE_INIT_PARAMATERS));
 	EEPROM_read(EEPROM_DEVICE_INIT_PARAMATERS_START, (unsigned char *)&device_init_paramaters, sizeof(DEVICE_INIT_PARAMATERS));
 	OSMutexPost(MUTEX_EEPROM);
 /*
@@ -1922,8 +1929,8 @@ static void AppGR64Task(void *p_arg)
 	CPU_INT08U err;
 	CPU_INT08U *match;
 	(void)p_arg;
-	
-	OSTimeDly(100);//冷却模块否则GR64_VIO状态不对;
+	CPU_INT08U counts = 0;
+	OSTimeDly(1000);//冷却模块否则GR64_VIO状态不对;
 	while(1)
 	{
 		if(GR64_VIO == 0)
@@ -1931,7 +1938,7 @@ static void AppGR64Task(void *p_arg)
 			GR64ONOFF_LAT = 0;
 			OSTimeDly(60);
 			GR64ONOFF_LAT = 1;
-			OSTimeDly(1500);
+			OSTimeDly(1000);
 			continue;
 			
 		}
@@ -1952,6 +1959,42 @@ static void AppGR64Task(void *p_arg)
 			{
 				continue;
 			}
+		/*****************************************************
+						验证通讯网络注册状况
+		******************************************************/
+			OSMutexPend(MUTEX_GR64, 0, &err);
+			//Flush_GR64_Buffer();
+			Send_To_GR64("AT+CREG?\r", SEND_ALL);
+			OSTimeDly(50);
+			Receive_From_GR64(GR64_RECEIVE_BUF, RECEIVE_ALL);
+			
+			match = Str_Str(GR64_RECEIVE_BUF, "+CREG: 0,1\r\n\r\nOK\r\n");
+			
+			
+			if(!(match || Str_Str(GR64_RECEIVE_BUF, "+CREG: 0,5\r\n\r\nOK\r\n")))
+			{
+				OSMutexPost(MUTEX_GR64);
+				counts++;
+				if(counts > 10)
+				{
+					counts = 0;
+					if(GR64_VIO == 1)
+					{
+						GR64ONOFF_LAT = 0;
+						OSTimeDly(60);
+						GR64ONOFF_LAT = 1;
+						OSTimeDly(1000);	
+					}
+					
+				}
+				else
+				{
+					OSTimeDly(500);	
+				
+				}
+				continue;
+			}
+			OSMutexPost(MUTEX_GR64);
 
 		/******************************************************************
 				设置短信数据格式为PDU;
@@ -2016,24 +2059,7 @@ static void AppGR64Task(void *p_arg)
 				continue;
 			}
 
-		/*****************************************************
-						验证通讯网络注册状况
-		******************************************************/
-			OSMutexPend(MUTEX_GR64, 0, &err);
-			//Flush_GR64_Buffer();
-			Send_To_GR64("AT+CREG?\r", SEND_ALL);
-			OSTimeDly(50);
-			Receive_From_GR64(GR64_RECEIVE_BUF, RECEIVE_ALL);
-			
-			match = Str_Str(GR64_RECEIVE_BUF, "+CREG: 0,1\r\n\r\nOK\r\n");
-			
-			
-			if(!(match || Str_Str(GR64_RECEIVE_BUF, "+CREG: 0,5\r\n\r\nOK\r\n")))
-			{
-				OSMutexPost(MUTEX_GR64);
-				continue;
-			}
-			OSMutexPost(MUTEX_GR64);
+
 		/*****************************************************************************
 								删除无用短信数据
 		******************************************************************************/
