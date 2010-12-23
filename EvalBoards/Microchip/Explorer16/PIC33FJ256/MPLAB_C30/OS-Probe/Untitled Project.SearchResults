@@ -1,5 +1,13 @@
----- BCD Matches (1 in 1 files) ----
-Lib_modbus.h (c:\micrium\...\uc-lib):116
-	unsigned char TP_SCTS_Year;//BCD;
-	unsigned char TP_SCTS_Month;
-	unsigned char TP_SCTS_Day;
+---- ENABLE_RS485_SEND Matches (3 in 2 files) ----
+App.c:352
+			ENABLE_RS485_SEND();
+			Flush_RS485_Buffer();
+			Send_To_RS485(Create_Send_Frame(RS485_SEND_BUF, device_parameters->slave_device_id[slave_device_cnt], MODBUS_DATA_QUERY, 0x0100, 0x000f), sizeof(MODBUS_DATA_QUERY_FRAME));
+App.c:1803
+															ENABLE_RS485_SEND();
+															Flush_RS485_Buffer();
+															Send_To_RS485(Create_Send_Frame(RS485_SEND_BUF, device_parameters->slave_device_id[index], MODBUS_TIME_SET, 0x0200, 0x0008), sizeof(MODBUS_TIME_SET_FRAME));
+Bsp.h (c:\micrium\...\bsp):255
+#define ENABLE_RS485_SEND() 		{}
+#define ENABLE_COMM_RECEIVE() 		{ch0enablesend = 0; Nop(); ch0enablerec = 0;}
+#define CLOSE_COMM()				{ch0enablesend = 0; Nop(); ch0enablerec = 1;}

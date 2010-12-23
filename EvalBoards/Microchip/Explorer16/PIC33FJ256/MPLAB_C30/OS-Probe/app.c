@@ -234,7 +234,7 @@ SEM_SMS_MSG_INDICATOR = OSSemCreate(0);
 	while(GR64_VIO == 1)
 	{
 		GR64ONOFF_LAT = 0;
-		OSTimeDly(60);
+		OSTimeDly(100);
 		GR64ONOFF_LAT = 1;
 		OSTimeDly(1000);	
 	}
@@ -245,55 +245,6 @@ SEM_SMS_MSG_INDICATOR = OSSemCreate(0);
 	EEPROM_write(EEPROM_DEVICE_INIT_PARAMATERS_START, (unsigned char *)&device_init_paramaters, sizeof(DEVICE_INIT_PARAMATERS));
 	EEPROM_read(EEPROM_DEVICE_INIT_PARAMATERS_START, (unsigned char *)&device_init_paramaters, sizeof(DEVICE_INIT_PARAMATERS));
 	OSMutexPost(MUTEX_EEPROM);
-/*
-	Iron_Read(IRON_PRIMARY_DEVICE_NAME, \
-				device_init_paramaters.primary_device_name, \
-				DEVICE_PASSWORD_MAX_LENGTH);
-
-	Iron_Read(IRON_PASSWORD, \
-				device_init_paramaters.password, \
-				DEVICE_PASSWORD_MAX_LENGTH);
-	
-	Iron_Read(IRON_SLAVE_DEVICE_NUMBERS, \
-				(unsigned char *)&(device_init_paramaters.slave_device_numbers), \
-				1);
-	for(i = 0; i < SLAVE_DEVICE_MAX_NUMBERS; i++)
-	{
-		Iron_Read(IRON_SLAVE_DEVICE_ID + i, \
-					(unsigned char *)&(device_init_paramaters.slave_device_id[i]), \
-					1);
-
-	}
-	for(i = 0; i < SLAVE_DEVICE_MAX_NUMBERS; i++)
-	{
-		Iron_Read(IRON_SLAVE_DEVICE_NAME + i * DEVICE_NAME_MAX_LENGTH, \
-					device_init_paramaters.slave_device_name[i], \
-					DEVICE_NAME_MAX_LENGTH);
-
-	}
-	for(i = 0; i < SLAVE_DEVICE_MAX_NUMBERS; i++)
-	{
-		Iron_Read(IRON_SLAVE_DEVICE_HISTORY_ALARM + i * sizeof(SMS_ALARM_FRAME), \
-					(unsigned char *)&(device_init_paramaters.slave_device_history_alarm[i]), \
-					sizeof(SMS_ALARM_FRAME));
-
-	}
-		Iron_Read(IRON_ALARM_TELEPHONE_NUMBERS, \
-				(unsigned char *)&(device_init_paramaters.alarm_telephone_numbers), \
-				1);
-	for(i = 0; i < ALARM_TELEPHONE_MAX_NUMBERS; i++)
-	{
-		Iron_Read(IRON_ALARM_TELEPHONE + i * ALARM_TELEPHONE_NUMBER_SIZE, \
-					device_init_paramaters.alarm_telephone[i], \
-					ALARM_TELEPHONE_NUMBER_SIZE);
-	}
-
-
-	Iron_Read(IRON_SERVICE_CENTER_ADDRESS, \
-				device_init_paramaters.service_center_address, \
-				ALARM_TELEPHONE_NUMBER_SIZE);
-	*/	
-
 
 	
     AppTaskCreate();                                                    /* Create additional user tasks                             */
@@ -398,12 +349,13 @@ static void AppRS485Task(void *p_arg)
 		for(slave_device_cnt = 0;slave_device_cnt < device_parameters->slave_device_numbers; slave_device_cnt++)
 		{
 			OSMutexPend(MUTEX_RS485, 0, &err);
-			ENABLE_RS485_SEND();
-			Flush_RS485_Buffer();
-			Send_To_RS485(Create_Send_Frame(RS485_SEND_BUF, device_parameters->slave_device_id[slave_device_cnt], MODBUS_DATA_QUERY, 0x0100, 0x000f), sizeof(MODBUS_DATA_QUERY_FRAME));
-			ENABLE_RS485_RECEIVE();
+			//ENABLE_COMM_SEND();
+			//Flush_RS485_Buffer();
+			//Send_To_RS485(Create_Send_Frame(RS485_SEND_BUF, device_parameters->slave_device_id[slave_device_cnt], MODBUS_DATA_QUERY, 0x0100, 0x000f), sizeof(MODBUS_DATA_QUERY_FRAME));
+			ENABLE_COMM_RECEIVE();
 			OSTimeDly(100);//接收间隔为1 S;
-			CLOSE_RS485();
+
+			//CLOSE_COMM();
 			frame_receive = (MODBUS_RECEIVE_FRAME *)Receive_From_RS485(RS485_RECEIVE_BUF, RECEIVE_ALL);
 			OSMutexPost(MUTEX_RS485);
 
@@ -1849,7 +1801,7 @@ static void AppSMSReceiveTask(void *p_arg)
 														for(index= 0;index < device_parameters->slave_device_numbers; index++)
 														{
 															OSMutexPend(MUTEX_RS485, 0, &err);
-															ENABLE_RS485_SEND();
+															ENABLE_COMM_SEND();
 															Flush_RS485_Buffer();
 															Send_To_RS485(Create_Send_Frame(RS485_SEND_BUF, device_parameters->slave_device_id[index], MODBUS_TIME_SET, 0x0200, 0x0008), sizeof(MODBUS_TIME_SET_FRAME));
 															OSMutexPost(MUTEX_RS485);
@@ -1936,7 +1888,7 @@ static void AppGR64Task(void *p_arg)
 		if(GR64_VIO == 0)
 		{
 			GR64ONOFF_LAT = 0;
-			OSTimeDly(60);
+			OSTimeDly(100);
 			GR64ONOFF_LAT = 1;
 			OSTimeDly(1000);
 			continue;

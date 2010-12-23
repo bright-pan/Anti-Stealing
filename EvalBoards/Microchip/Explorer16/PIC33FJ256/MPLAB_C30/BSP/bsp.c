@@ -145,15 +145,16 @@ static  void  CPU_PIN_Init(void)
     
     /*****************************************
     
-    	铁电存储器(32K)
+    通讯接口
     
     *****************************************/
-    
-    FMSPISO_dir = INPUT;
-    FMSPISCK_dir = INPUT;
-    FMSPISI_dir = INPUT;
-    FMSPICS_dir = OUTPUT;
-    FMSPICS = 1;
+	COMM_CS_DIR = INPUT;
+	COMM_RS_DIR = OUTPUT;
+	RS485_CS_DIR = OUTPUT;
+	W433_CS_DIR = OUTPUT;
+	RS485_CS_LAT = 1;//不工作
+	W433_CS_LAT = 1;//不工作
+//	COMM_RS_LAT = 1;
 
 }
 
@@ -617,6 +618,17 @@ void App_TimeTickHook (void){
 		OSSemPost(SEM_SMS_MSG_INDICATOR);
 
 	HIS_Value = RT_Value;
+
+	if(COMM_CS == 1)
+	{
+		RS485_CS_LAT = 1;
+		W433_CS_LAT = 0;
+	}
+	else
+	{
+		RS485_CS_LAT = 0;
+		W433_CS_LAT = 1;
+	}
 }
 /*
 
